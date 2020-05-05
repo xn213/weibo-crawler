@@ -43,6 +43,7 @@ function getHotSearchList() {
 }
 
 const TIME = '30 * * * * *'
+let index = 0
 nodeSchedule.scheduleJob(TIME,  async function(){
   try {
     const hotList = await getHotSearchList()
@@ -51,7 +52,8 @@ nodeSchedule.scheduleJob(TIME,  async function(){
       JSON.stringify(hotList, null, 2),
       'utf-8'
     )
-    console.log('完成一次微博热搜爬取: ', new Date())
+    index++
+    console.log(new Date(), `完成第${ index }次微博热搜爬取...`)
 
   } catch(err) {
     console.log('error: ', err)
