@@ -7,23 +7,20 @@ const fs = require('fs')
 const nodeSchedule = require('node-schedule')
 
 // 微博热搜的 url
-const WEBOURL = 'https://s.weibo.com'
-const hotSearchURL = WEBOURL + '/top/summary?cate=realtimehot'
+const WEBO_URL = 'https://s.weibo.com'
+const hotSearchURL = WEBO_URL + '/top/summary?cate=realtimehot'
 
-function getHotSearchList() {
+function getWeiboHotSearchList() {
   return new Promise((resolve, reject) => {
     // 使用 superagent 发送 get 请求
     superagent.get(hotSearchURL, (err, res) => {
       if (err) reject('request error')
-
       const $ = cheerio.load(res.text)
-
       let hotList = []
-
       $('#pl_top_realtimehot table tbody tr').each(function (index) {
         if (index != 0) {
           const $td = $(this).children().eq(1)
-          const link = WEBOURL + $td.find('a').attr('href')
+          const link = WEBO_URL + $td.find('a').attr('href')
           const text = $td.find('a').text()
           const hotValue = $td.find('span').text()
           const icon = $td.find('img').attr('src') ? 'https:' + $td.find('img').attr('src') : ''
@@ -36,26 +33,25 @@ function getHotSearchList() {
           })
         }
       })
-
       hotList.length ? resolve(hotList) : reject('error')
     })
   })
 }
 
 const TIME = '30 * * * * *'
-let index = 0
-nodeSchedule.scheduleJob(TIME,  async function(){
+let count = 0
+nodeSchedule.scheduleJob(TIME, async function () {
   try {
-    const hotList = await getHotSearchList()
+    const hotList = await getWeiboHotSearchList()
     await fs.writeFileSync(
       `${__dirname}/hotSearch.json`,
       JSON.stringify(hotList, null, 2),
       'utf-8'
     )
-    index++
-    console.log(new Date(), `完成第${ index }次微博热搜爬取...`)
+    count++
+    console.log(new Date(), `完成第${count}次微博热搜爬取...`)
 
-  } catch(err) {
+  } catch (err) {
     console.log('error: ', err)
   }
 })
